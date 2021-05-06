@@ -13,13 +13,14 @@ def update_VideosToDownload(
     newStatus
 ):
     logging.info("update_VideosToDownload running")
-    currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    currentTime = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     updateStatement = f"""
 UPDATE VideosToDownload
-SET [Status] = '{newStatus}' AND [LastStatusUpdate] = '{currentTime}'
+SET [Status] = '{newStatus}', [LastStatusUpdate] = '{currentTime}'
 WHERE [RowID] = {rowID}
     """
     logging.info(f"updateStatement: {updateStatement}")
+    run_sql_query(updateStatement)
 
 def run_sql_query(query):
     connectionString = get_connection_string()
@@ -44,7 +45,7 @@ def get_connection_string():
 def get_video_name(
     vidURL
 ):
-    if "youtube.com" in vidURL.lower():
+    if "youtube" in vidURL.lower():
         ## Extract the video ID
         parsed = urlparse.urlparse(vidURL)
         videoID = parse_qs(parsed.query)['v'][0]
@@ -69,7 +70,7 @@ def get_video_name(
             dateString = publishDate.strftime("%Y%m%d")
             videoTitle = f"{dateString} - {videoTitle}"
 
-    elif "twitch.com" in vidURL.lower():
+    elif "twitch" in vidURL.lower():
         ## Extract the video ID
         videoID = urlparse.urlparse(vidURL).path.split("/")[-1]
         ## Get video name
@@ -128,7 +129,7 @@ def add_row_to_AzureBlobVideos(
                 f"'{vidName}'",
                 f"'{vidName}'",
                 f"'{sport}'",
-                f"'{endpointID}'",
+                f"{endpointID}",
                 "1" if multipleVideoEvent else "0",
                 str(samplingProportion),
                 "1" if audioTranscript else "0"

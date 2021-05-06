@@ -2,7 +2,7 @@
   "scriptFile": "__init__.py",
   "bindings": [
     {
-      "name": "name",
+      "name": "dst1Inputs",
       "type": "activityTrigger",
       "direction": "in"
     }

@@ -4,7 +4,7 @@ import azure.functions as func
 import azure.durable_functions as df
 
 
-async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:
+async def main(req: func.HttpRequest, starter: str):
     client = df.DurableOrchestrationClient(starter)
     ## Get inputs
     inputs = {}

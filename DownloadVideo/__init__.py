@@ -7,8 +7,9 @@
 # - run pip install -r requirements.txt
 
 import logging
-from azure.storage.blob import BlockBlobServicec
-from azure.storage.blob.models import ContentSettings
+# from azure.storage.blob import BlockBlobService
+# from azure.storage.blob.models import ContentSettings
+from azure.storage.blob import BlobClient, ContentSettings
 import streamlink
 import shutil
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -48,34 +49,46 @@ def main(dst1Outputs: dict) -> str:
     logging.info(f"qualToUse: {qualToUse}")
     stream = nonEmptyStreams[qualToUse]
 
-    outBBS = BlockBlobService(
-            connection_string=os.getenv("fsevideoCS")
-        )
+    # outBBS = BlockBlobService(
+    #         connection_string=os.getenv("fsevideoCS")
+    #     )
+    blobName = f"{dst1Outputs['vidName']}.mp4"
+    blobClient = BlobClient.from_connection_string(
+        conn_str=os.getenv("fsevideoCS"),
+        container_name="video-from-stream",
+        blob_name=blobName
+    )
+    ## Create blob in "video-from-stream" container initially
     logging.info("about to create blob")
     fd = stream.open()
-    ## Create blob in "video-from-stream" container initially
-    blobName = f"{dst1Outputs['vidName']}.mp4"
-    outBBS.create_blob_from_stream(
-            container_name="video-from-stream", 
-            blob_name=blobName, 
-            stream=fd,
-            max_connections=1,
-            use_byte_buffer=True,
-            content_settings=ContentSettings(
-                content_type="video/mp4"
-            )
+    blobClient.upload_blob(
+        data=fd,
+        overwrite=True,
+        content_settings=ContentSettings(
+            content_type="video/mp4"
         )
+    )
+    # outBBS.create_blob_from_stream(
+    #         container_name="video-from-stream", 
+    #         blob_name=blobName, 
+    #         stream=fd,
+    #         max_connections=1,
+    #         # use_byte_buffer=True,
+    #         content_settings=ContentSettings(
+    #             content_type="video/mp4"
+    #         )
+    #     )
     ## Then copy blob over to "azure-video-to-image-import" container
     ##    - this is to stop the event grid trigger firing before the whole
     ##     blob has been created initially
     ##    - this early triggering is just a theory, hasn't been tested but
     ##     due to requirements to get the tool built, it was assumed this would
     ##     cause issues
-    copySource = f"https://fsevideos.blob.core.windows.net/video-from-stream/{blobName}"
-    outBBS.copy_blob(
-        container_name="azure-video-to-image-import",
-        blob_name=blobName,
-        copy_source=copySource
-    )
+    # copySource = f"https://fsevideos.blob.core.windows.net/video-from-stream/{blobName}"
+    # outBBS.copy_blob(
+    #     container_name="azure-video-to-image-import",
+    #     blob_name=blobName,
+    #     copy_source=copySource
+    # )
 
     return "done"

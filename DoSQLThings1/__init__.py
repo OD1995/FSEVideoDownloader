@@ -31,9 +31,9 @@ def main(dst1Inputs: dict) -> dict:
         dtr['vidName'] = dst1Inputs['name']
     ## Add row to AzureBlobVideos SQL table
     eID = "NULL" if dst1Inputs['endpointID'] is None else dst1Inputs['endpointID']
-    mve = "NULL" if dst1Inputs['multipleVideoEvent'] is None else dst1Inputs['multipleVideoEvent']
+    mve = False if dst1Inputs['multipleVideoEvent'] is None else dst1Inputs['multipleVideoEvent']
     sp = "NULL" if dst1Inputs['samplingProportion'] is None else dst1Inputs['samplingProportion']
-    at = "NULL" if dst1Inputs['audioTranscript'] is None else dst1Inputs['audioTranscript']
+    at = False if dst1Inputs['audioTranscript'] is None else dst1Inputs['audioTranscript']
     add_row_to_AzureBlobVideos(
         vidName=dtr['vidName'],
         sport=dst1Inputs['sport'],
