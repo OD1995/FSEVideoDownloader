@@ -6,6 +6,7 @@ import urllib.parse as urlparse
 from urllib.parse import parse_qs
 from dateutil.parser import isoparse
 import requests
+import twitch
 
 def update_VideosToDownload(
     rowID,
@@ -69,7 +70,15 @@ def get_video_name(
             videoTitle = f"{dateString} - {videoTitle}"
 
     elif "twitch.com" in vidURL.lower():
-        pass
+        ## Extract the video ID
+        videoID = urlparse.urlparse(vidURL).path.split("/")[-1]
+        ## Get video name
+        helix = twitch.Helix(
+            client_id=os.getenv("twitch_clientID"),
+            client_secret=os.getenv("twitch_clientsecret")
+        )
+        videoTitle = helix.video(videoID).title
+
     else:
         raise ValueError("URL is from neither YouTube nor Twitch")
 
@@ -88,3 +97,46 @@ def get_yt_vid_info(
     vidName = req.json()['items'][0]['snippet']['title']
     publishDate = isoparse(req.json()['items'][0]['snippet']['publishedAt'])
     return vidName,publishDate
+
+def add_row_to_AzureBlobVideos(
+    vidName : str,
+    sport : str,
+    endpointID : str,
+    multipleVideoEvent : bool,
+    samplingProportion : float,
+    audioTranscript : bool
+):
+    ## List of AzureBlobVideos columns
+    columnList = [
+        # 'VideoID', - auto incrementing
+        'VideoName',
+        'Event',
+        'Sport',
+        'EndpointID',
+        'MultipleVideoEvent',
+        'SamplingProportion',
+        'AudioTranscript'
+    ]
+    ## Same as above, in SQL-friendly string form 
+    columnListString = ",".join([
+        f"[{c}]"
+        for c in columnList
+    ])
+    ## Values to insert, in SQL-friendly string form
+    valuesString = ",".join(
+        [
+                f"'{vidName}'",
+                f"'{vidName}'",
+                f"'{sport}'",
+                f"'{endpointID}'",
+                "1" if multipleVideoEvent else "0",
+                str(samplingProportion),
+                "1" if audioTranscript else "0"
+        ])
+    ## Build query
+    insertQuery = f"""
+    INSERT INTO AzureBlobVideos ({columnListString})
+    VALUES ({valuesString})
+    """
+    logging.info(f"AzureBlobVideos query: {insertQuery}")
+    run_sql_query(insertQuery)

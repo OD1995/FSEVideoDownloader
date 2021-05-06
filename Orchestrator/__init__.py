@@ -14,15 +14,21 @@ import azure.durable_functions as df
 
 
 def orchestrator_function(context: df.DurableOrchestrationContext):
+    ## Get inputs from trigger
+    dst1Inputs = json.loads(context._input)
+    logging.info(f"dst1Inputs: {dst1Inputs}")
     ## DoSQLThings1  - change 'Status' column to "In Progress" and 'LastStatusUpdate'
     ##               - add row to AzureBlobVideos after deciding video name
-    result1 = yield context.call_activity('DoSQLThings1', "Tokyo")
+    dst1Outputs = yield context.call_activity('DoSQLThings1', dst1Inputs)
+    logging.info(f"dst1Outputs: {dst1Outputs}")
     ## DownloadVideo - download video to 'video-from-stream' container
     ##               - copy blob to 'azure-video-to-image-import' container
-    result2 = yield context.call_activity('DownloadVideo', "Seattle")
+    dvOutput = yield context.call_activity('DownloadVideo', dst1Outputs)
+    logging.info(f"dvOutput: {dvOutput}")
     ## DoSQLThings2  - change 'Status' column to "Completed" and 'LastStatusUpdate'
-    result3 = yield context.call_activity('DoSQLThings2', "Seattle")
+    dst2Output = yield context.call_activity('DoSQLThings2', dst1Inputs)
+    logging.info(f"dst2Output: {dst2Output}")
 
-    return [result1, result2, result3]
+    return "completed"
 
 main = df.Orchestrator.create(orchestrator_function)

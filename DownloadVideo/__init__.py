@@ -7,30 +7,17 @@
 # - run pip install -r requirements.txt
 
 import logging
-from azure.storage.blob import BlockBlobService
+from azure.storage.blob import BlockBlobServicec
 from azure.storage.blob.models import ContentSettings
 import streamlink
 import shutil
 from streamlink.stream.ffmpegmux import MuxedStream
+import os
 
-
-def main(inputs: dict) -> str:
+def main(dst1Outputs: dict) -> str:
     logging.info("DownloadVideo started")
-    ## Vars to use
-    varsToUse = {}
-    ## Get video URL
-    varsToUse['vidURL'] = inputs['url']
-    ## Decide on video name
-    if inputs['name'] is None:
-        varsToUse["vidName"] = ""
-    else:
-        varsToUse["vidName"] = inputs['name']
-    ## Output container
-    varsToUse
-
-
     ## Get all streams of the video
-    allStreams = streamlink.streams(vidURL)
+    allStreams = streamlink.streams(dst1Outputs["url"])
     logging.info(f"allStreams: {len(allStreams)}")
     nonEmptyStreams = {
                 k:v
@@ -62,13 +49,15 @@ def main(inputs: dict) -> str:
     stream = nonEmptyStreams[qualToUse]
 
     outBBS = BlockBlobService(
-            connection_string=outCS
+            connection_string=os.getenv("fsevideoCS")
         )
     logging.info("about to create blob")
     fd = stream.open()
+    ## Create blob in "video-from-stream" container initially
+    blobName = f"{dst1Outputs['vidName']}.mp4"
     outBBS.create_blob_from_stream(
             container_name="video-from-stream", 
-            blob_name=f"{vidName}.mp4", 
+            blob_name=blobName, 
             stream=fd,
             max_connections=1,
             use_byte_buffer=True,
@@ -76,3 +65,17 @@ def main(inputs: dict) -> str:
                 content_type="video/mp4"
             )
         )
+    ## Then copy blob over to "azure-video-to-image-import" container
+    ##    - this is to stop the event grid trigger firing before the whole
+    ##     blob has been created initially
+    ##    - this early triggering is just a theory, hasn't been tested but
+    ##     due to requirements to get the tool built, it was assumed this would
+    ##     cause issues
+    copySource = f"https://fsevideos.blob.core.windows.net/video-from-stream/{blobName}"
+    outBBS.copy_blob(
+        container_name="azure-video-to-image-import",
+        blob_name=blobName,
+        copy_source=copySource
+    )
+
+    return "done"
