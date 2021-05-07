@@ -14,6 +14,9 @@ import streamlink
 import shutil
 from streamlink.stream.ffmpegmux import MuxedStream
 import os
+from MyFunctions import (
+    wait_for_copy
+)
 
 def main(dst1Outputs: dict) -> str:
     logging.info("DownloadVideo started")
@@ -84,11 +87,23 @@ def main(dst1Outputs: dict) -> str:
     ##    - this early triggering is just a theory, hasn't been tested but
     ##     due to requirements to get the tool built, it was assumed this would
     ##     cause issues
-    # copySource = f"https://fsevideos.blob.core.windows.net/video-from-stream/{blobName}"
+    copySource = f"https://fsevideos.blob.core.windows.net/video-from-stream/{blobName}"
+    logging.info(f"copySource: {copySource}")
     # outBBS.copy_blob(
     #     container_name="azure-video-to-image-import",
     #     blob_name=blobName,
     #     copy_source=copySource
     # )
-
+    blobClientCopy = BlobClient.from_connection_string(
+        conn_str=os.getenv("fsevideoCS"),
+        container_name="azure-video-to-image-import",
+        blob_name=blobName
+    )
+    blobClientCopy.start_copy_from_url(
+        source_url=copySource
+    )
+    ## Wait until copy is complete
+    logging.info("copying started")
+    _ = wait_for_copy(blobClientCopy)
+    
     return "done"

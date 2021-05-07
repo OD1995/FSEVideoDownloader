@@ -7,6 +7,7 @@ from urllib.parse import parse_qs
 from dateutil.parser import isoparse
 import requests
 import twitch
+from time import sleep
 
 def update_VideosToDownload(
     rowID,
@@ -141,3 +142,10 @@ def add_row_to_AzureBlobVideos(
     """
     logging.info(f"AzureBlobVideos query: {insertQuery}")
     run_sql_query(insertQuery)
+
+def wait_for_copy(blob):
+    props = blob.get_blob_properties()
+    while props.copy.status == 'pending':
+        sleep(5)
+        props = blob.get_blob_properties()
+    return props
