@@ -1,0 +1,10 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "dst1Outputs",
+      "type": "activityTrigger",
+      "direction": "in"
+    }
+  ]
+}

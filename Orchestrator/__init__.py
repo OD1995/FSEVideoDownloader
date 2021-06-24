@@ -23,7 +23,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     logging.info(f"dst1Outputs: {dst1Outputs}")
     ## DownloadVideo - download video to 'video-from-stream' container
     ##               - copy blob to 'azure-video-to-image-import' container
-    dvOutput = yield context.call_activity('DownloadVideo', dst1Outputs)
+    dvOutput = yield context.call_activity('DownloadVideoV2', dst1Outputs)
     logging.info(f"dvOutput: {dvOutput}")
     ## DoSQLThings2  - change 'Status' column to "Completed" and 'LastStatusUpdate'
     dst2Output = yield context.call_activity('DoSQLThings2', dst1Inputs)

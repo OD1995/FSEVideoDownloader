@@ -25,7 +25,8 @@ async def main(req: func.HttpRequest, starter: str) -> func.HttpResponse:
         "endpointID",
         "multipleVideoEvent",
         "samplingProportion",
-        "audioTranscript"
+        "audioTranscript",
+        'databaseID',
     ]:
         inputs[f] = req.params.get(f)
     ## Start orchestrator

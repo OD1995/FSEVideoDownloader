@@ -34,12 +34,14 @@ def main(dst1Inputs: dict) -> dict:
     mve = False if dst1Inputs['multipleVideoEvent'] is None else dst1Inputs['multipleVideoEvent']
     sp = "NULL" if dst1Inputs['samplingProportion'] is None else dst1Inputs['samplingProportion']
     at = False if dst1Inputs['audioTranscript'] is None else dst1Inputs['audioTranscript']
+    dbID = "NULL" if dst1Inputs['databaseID'] is None else dst1Inputs['databaseID']
     add_row_to_AzureBlobVideos(
         vidName=dtr['vidName'],
         sport=dst1Inputs['sport'],
         endpointID=eID,
         multipleVideoEvent=mve,
         samplingProportion=sp,
-        audioTranscript=at
+        audioTranscript=at,
+        databaseID=dbID
     )
     return dtr

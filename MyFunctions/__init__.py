@@ -106,7 +106,8 @@ def add_row_to_AzureBlobVideos(
     endpointID : str,
     multipleVideoEvent : bool,
     samplingProportion : float,
-    audioTranscript : bool
+    audioTranscript : bool,
+    databaseID : str
 ):
     ## List of AzureBlobVideos columns
     columnList = [
@@ -117,7 +118,8 @@ def add_row_to_AzureBlobVideos(
         'EndpointID',
         'MultipleVideoEvent',
         'SamplingProportion',
-        'AudioTranscript'
+        'AudioTranscript',
+        'DatabaseID'
     ]
     ## Same as above, in SQL-friendly string form 
     columnListString = ",".join([
@@ -133,7 +135,8 @@ def add_row_to_AzureBlobVideos(
                 f"{endpointID}",
                 "1" if multipleVideoEvent else "0",
                 str(samplingProportion),
-                "1" if audioTranscript else "0"
+                "1" if audioTranscript else "0",
+                f"'{databaseID}'",
         ])
     ## Build query
     insertQuery = f"""
